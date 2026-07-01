@@ -18,6 +18,15 @@ _model_load_attempted: bool = False
 
 _TRUE_VALUES = {"1", "true", "t", "yes", "y", "on"}
 _FALSE_VALUES = {"0", "false", "f", "no", "n", "off"}
+_GREETING_ONLY_RE = re.compile(
+    r"^\s*(?:hello|hey|hi|good morning|good afternoon|good evening)\b[!.?,\s]*$",
+    re.IGNORECASE,
+)
+_CAPABILITY_QUERY_RE = re.compile(
+    r"^\s*(?:(?:hello|hey|hi|good morning|good afternoon|good evening)\b[!.?,\s]*)?"
+    r"(?:what can you do|how can you help|help me)\??\s*$",
+    re.IGNORECASE,
+)
 
 
 def _configured_model_id() -> str:
@@ -30,6 +39,16 @@ def _configured_model_id() -> str:
 def _has_explicit_blank_model_id() -> bool:
     configured = os.getenv("MODEL_ID")
     return configured is not None and not configured.strip()
+
+
+def _mock_capability_plan(goal: str, entities: dict) -> dict:
+    return {
+        "goal": goal,
+        "tool": "",
+        "args": dict(entities),
+        "done": True,
+        "final_response": _MOCK_CAPABILITIES_RESPONSE,
+    }
 
 
 def _read_mock_mode_override() -> Optional[bool]:
@@ -137,22 +156,6 @@ _MOCK_PLAN_RULES: list[tuple[list[str], dict]] = [
      {"goal": "track order", "tool": "track_order_tool", "args": {}, "done": False, "final_response": ""}),
     (["human", "agent", "person", "operator", "supervisor", "manager", "escalate"],
      {"goal": "human handoff", "tool": "handoff_tool", "args": {}, "done": False, "final_response": ""}),
-    (["hello", "hey", "hi", "good morning", "good afternoon", "good evening"],
-     {
-        "goal": "greeting",
-        "tool": "",
-        "args": {},
-        "done": True,
-        "final_response": _MOCK_CAPABILITIES_RESPONSE,
-     }),
-    (["what can you do", "how can you help", "help me"],
-     {
-        "goal": "capability question",
-        "tool": "",
-        "args": {},
-        "done": True,
-        "final_response": _MOCK_CAPABILITIES_RESPONSE,
-     }),
 ]
 
 
@@ -164,6 +167,10 @@ def mock_plan(user_message: str, entities: dict, memory: dict, observations: lis
             plan = dict(template)
             plan["args"] = dict(entities)
             return plan
+    if _CAPABILITY_QUERY_RE.fullmatch(user_message):
+        return _mock_capability_plan("capability question", entities)
+    if _GREETING_ONLY_RE.fullmatch(user_message):
+        return _mock_capability_plan("greeting", entities)
     # Default: clarify the request instead of silently handing off.
     return {
         "goal": "clarify request",

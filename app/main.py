@@ -49,7 +49,7 @@ def _check_rate_limit(client_ip: str) -> bool:
 async def lifespan(_: FastAPI):
     mock_mode = is_mock_mode()
     if mock_mode:
-        logger.warning("Application started in mock mode. Set MOCK_MODE=false and install model dependencies to use the real LLM.")
+        logger.warning("Application started in mock mode. Install the optional model dependencies to enable the real LLM, and set MOCK_MODE=false only if you want to force that path when the dependencies are present.")
     else:
         logger.info("Application started with the real LLM backend.")
     yield
