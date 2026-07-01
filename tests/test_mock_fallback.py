@@ -65,7 +65,7 @@ def test_health_reports_mock_mode():
     assert response.json() == {"status": "ok", "version": "1.0.0", "mock_mode": True}
 
 
-def test_mock_mode_false_falls_back_deterministically_when_model_load_fails(monkeypatch):
+def test_model_load_failure_falls_back_to_mock_mode(monkeypatch):
     calls = {"count": 0}
 
     def fake_load() -> bool:

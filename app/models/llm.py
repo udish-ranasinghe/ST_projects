@@ -60,7 +60,10 @@ def _read_mock_mode_override() -> Optional[bool]:
         return True
     if value in _FALSE_VALUES:
         return False
-    logger.warning("Unrecognized MOCK_MODE value '%s'; ignoring override.", raw)
+    logger.warning(
+        "Unrecognized MOCK_MODE value '%s'; ignoring override. Valid values: true, false, 1, 0, yes, no, on, off.",
+        raw,
+    )
     return None
 
 
