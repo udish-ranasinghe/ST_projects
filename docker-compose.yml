@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  backend:
+    build: .
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    environment:
+      - MOCK_MODE=false
+      - LOG_FILE=logs/agent_turns.jsonl
+      - AGENT_MAX_STEPS=3
+      - MAX_MSG_CHARS=1000
+      - RATE_LIMIT_PER_MINUTE=20
+    volumes:
+      - ./logs:/app/logs
+
+  ui:
+    build: .
+    command: python run_ui.py
+    ports:
+      - "7860:7860"
+    environment:
+      - BACKEND_URL=http://backend:8000
+      - UI_HOST=0.0.0.0
+      - UI_PORT=7860
+      - SHOW_DEBUG=false
+    depends_on:
+      - backend

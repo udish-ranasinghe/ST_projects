@@ -1,0 +1,48 @@
+policies:
+  return_and_refund: |
+    RETURN & REFUND POLICY
+    ========================
+    Eligibility:
+    - Returns are accepted within 30 days of the confirmed delivery date.
+    - Items must be unused, unwashed, and in their original packaging with all tags attached.
+    - Final-sale or clearance items are NOT eligible for return or refund.
+    - Digital goods and downloadable content are non-refundable once accessed.
+    - Personalised or custom-made items cannot be returned unless they are defective.
+
+    Process:
+    1. Initiate your return request by contacting customer support with your order ID.
+    2. You will receive a Return Merchandise Authorisation (RMA) number within 2 business days.
+    3. Ship the item back within 7 days of receiving the RMA number.
+    4. Use the prepaid return label provided; if lost, contact support for a replacement.
+
+    Refund Timeline:
+    - Once the returned item is received and inspected, a refund decision is made within 3 business days.
+    - Approved refunds are processed to your original payment method within 5–7 business days.
+    - You will receive an email confirmation when the refund is issued.
+    - Original shipping fees are non-refundable unless the return is due to our error.
+
+    Exchanges:
+    - Exchanges are supported for size or colour variants of the same product.
+    - Request an exchange at the same time as your return request.
+
+    Damaged or Incorrect Items:
+    - If you received a damaged or incorrect item, please contact us within 7 days of delivery.
+    - Attach photos of the item and packaging.
+    - We will arrange a replacement or full refund at no extra cost.
+
+  billing: |
+    BILLING POLICY
+    ==============
+    - All charges appear on your statement within 3–5 business days of your order.
+    - If you believe you have been charged incorrectly, contact support within 60 days.
+    - Duplicate charge disputes are resolved within 10 business days.
+    - Subscription billing occurs on the same date each month; you may cancel at any time.
+    - Refunds for billing errors are processed within 5–7 business days.
+
+  account_update: |
+    ACCOUNT UPDATE POLICY
+    =====================
+    - For security, changes to email, phone number, or address require identity verification.
+    - Verification is completed via a one-time passcode (OTP) sent to your registered email or phone.
+    - Only the account holder may request changes.
+    - Support agents cannot change passwords; use the self-service reset link.

@@ -1,0 +1,85 @@
+{
+  "skills": {
+    "track_order_tool": {
+      "description": "Track order status and shipping details by order ID",
+      "required_entities": ["order_id"],
+      "optional_entities": [],
+      "keywords": ["track", "order", "parcel", "delivery", "shipping", "where is", "status", "arrived", "dispatch"],
+      "sensitive": false
+    },
+    "refund_policy_tool": {
+      "description": "Answer refund and return policy questions grounded in policy text",
+      "required_entities": [],
+      "optional_entities": ["order_id"],
+      "keywords": ["refund", "return", "policy", "money back", "send back", "exchange", "cancel", "cancellation"],
+      "sensitive": false
+    },
+    "update_account_tool": {
+      "description": "Update customer account fields: email, phone, or address. Requires verification.",
+      "required_entities": ["field", "new_value"],
+      "optional_entities": ["verified"],
+      "keywords": ["update", "change", "email", "phone", "address", "account", "profile"],
+      "sensitive": true
+    },
+    "billing_tool": {
+      "description": "Handle billing and payment issues such as duplicate charges, invoices, and payment failures",
+      "required_entities": [],
+      "optional_entities": ["order_id"],
+      "keywords": ["billing", "charged", "invoice", "payment", "twice", "overcharged", "charge", "bill", "subscription"],
+      "sensitive": false
+    },
+    "product_issue_tool": {
+      "description": "Handle product issues: damaged, wrong, or missing items",
+      "required_entities": [],
+      "optional_entities": ["order_id"],
+      "keywords": ["damaged", "broken", "wrong", "missing", "defective", "not working", "faulty", "incomplete", "incorrect"],
+      "sensitive": false
+    },
+    "handoff_tool": {
+      "description": "Escalate the conversation to a human support agent",
+      "required_entities": [],
+      "optional_entities": [],
+      "keywords": ["human", "agent", "person", "speak to someone", "operator", "supervisor", "manager", "escalate", "help me"],
+      "sensitive": false
+    }
+  },
+  "guardrails": {
+    "max_message_chars": 1000,
+    "max_steps_per_turn": 3,
+    "rate_limit_per_minute": 20,
+    "verification_required_tools": ["update_account_tool"],
+    "escalation_triggers": ["legal", "sue", "court", "lawyer", "fraud", "threatening", "abuse"]
+  },
+  "mock_orders": {
+    "12345": {
+      "status": "In Transit",
+      "eta": "2026-07-04",
+      "carrier": "DHL",
+      "destination": "London, UK"
+    },
+    "99999": {
+      "status": "Delivered",
+      "eta": "2026-06-28",
+      "carrier": "FedEx",
+      "destination": "Manchester, UK"
+    },
+    "55555": {
+      "status": "Processing",
+      "eta": "2026-07-06",
+      "carrier": "UPS",
+      "destination": "Birmingham, UK"
+    },
+    "77777": {
+      "status": "Out for Delivery",
+      "eta": "2026-07-01",
+      "carrier": "Royal Mail",
+      "destination": "Edinburgh, UK"
+    },
+    "11111": {
+      "status": "Cancelled",
+      "eta": "N/A",
+      "carrier": "N/A",
+      "destination": "N/A"
+    }
+  }
+}
