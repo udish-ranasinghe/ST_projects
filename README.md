@@ -103,15 +103,36 @@ cp .env.example .env
 # Edit .env if needed (all defaults work for demo mode)
 ```
 
-### 3. (Optional) Enable real LLM
+### 3. Choose mock mode or real LLM mode
 
-To use Qwen2.5-1.5B-Instruct instead of mock mode, uncomment the ML lines in `requirements.txt` and reinstall:
+#### Mock mode (recommended for demos, tests, lightweight deployments)
+
+Set `MOCK_MODE=true` to force the deterministic fallback even if model dependencies are installed:
+
+```bash
+MOCK_MODE=true
+```
+
+Use mock mode when you want predictable responses, fast startup, CI-friendly behavior, or you do not want to install the optional ML stack.
+
+#### Real LLM mode
+
+To use Qwen2.5-1.5B-Instruct instead of mock mode, install the optional ML dependencies:
 
 ```bash
 pip install torch transformers accelerate sentencepiece
 ```
 
-Then set `MODEL_ID=Qwen/Qwen2.5-1.5B-Instruct` in `.env` (this is the default).
+Then set:
+
+```bash
+MOCK_MODE=false
+MODEL_ID=Qwen/Qwen2.5-1.5B-Instruct
+```
+
+Use real LLM mode when you want model-generated planning and policy answers in environments that can support the extra dependencies and model startup cost.
+
+If `MOCK_MODE` is unset, the app will try the configured model first and fall back to mock mode if the dependencies or model are unavailable.
 
 ---
 
@@ -152,6 +173,14 @@ pytest
 ```
 
 Tests run in **mock mode** automatically (no GPU needed).
+
+The `/health` endpoint reports the current `mock_mode` state so deployments can confirm whether the app is serving deterministic fallback behavior or the real LLM path.
+
+## Deployment guidance
+
+- **Use `MOCK_MODE=true`** for CI, local demos, preview environments, and any deployment where you want deterministic behavior without optional ML packages.
+- **Use `MOCK_MODE=false`** only when `torch`, `transformers`, and related dependencies are installed and the runtime can load the configured model.
+- If the real model cannot be loaded, the app will log that it is running in mock mode and continue serving requests with the deterministic fallback.
 
 Test coverage:
 - `test_planner_routing.py` — intent routing to expected tool for 18 prompts

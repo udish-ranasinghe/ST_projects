@@ -13,12 +13,38 @@ logger = logging.getLogger(__name__)
 
 _generator = None
 _mock_mode: bool = False
+_mock_mode_forced: Optional[bool] = None
+_model_load_attempted: bool = False
+
+_TRUE_VALUES = {"1", "true", "t", "yes", "y", "on"}
+_FALSE_VALUES = {"0", "false", "f", "no", "n", "off"}
+
+
+def _configured_model_id() -> str:
+    configured = os.getenv("MODEL_ID")
+    if configured is None:
+        return "Qwen/Qwen2.5-1.5B-Instruct"
+    return configured.strip()
+
+
+def _read_mock_mode_override() -> Optional[bool]:
+    raw = os.getenv("MOCK_MODE")
+    if raw is None:
+        return None
+    value = raw.strip().lower()
+    if value in _TRUE_VALUES:
+        return True
+    if value in _FALSE_VALUES:
+        return False
+    logger.warning("Unrecognized MOCK_MODE value '%s'; ignoring override.", raw)
+    return None
 
 
 def _load_model() -> bool:
     """Attempt to load Qwen2.5 Instruct via transformers. Returns True on success."""
-    global _generator, _mock_mode
-    model_id = os.getenv("MODEL_ID", "Qwen/Qwen2.5-1.5B-Instruct")
+    global _generator, _mock_mode, _model_load_attempted
+    model_id = _configured_model_id()
+    _model_load_attempted = True
     try:
         import torch
         from transformers import pipeline
@@ -46,7 +72,32 @@ def _load_model() -> bool:
 
 def _ensure_model() -> None:
     global _generator, _mock_mode
-    if _generator is None and not _mock_mode:
+    if _mock_mode_forced is True:
+        _mock_mode = True
+        _generator = None
+        return
+
+    env_mock_mode = _read_mock_mode_override()
+    if env_mock_mode is True:
+        if not _mock_mode:
+            logger.info("MOCK_MODE is enabled; using deterministic mock responses.")
+        _mock_mode = True
+        _generator = None
+        return
+
+    if _generator is not None:
+        _mock_mode = False
+        return
+
+    if _mock_mode and _model_load_attempted:
+        return
+
+    if not env_mock_mode and not _configured_model_id():
+        logger.info("MODEL_ID is empty; running in deterministic mock mode.")
+        _mock_mode = True
+        return
+
+    if not _mock_mode or env_mock_mode is False:
         _load_model()
 
 
@@ -75,6 +126,19 @@ _MOCK_PLAN_RULES: list[tuple[list[str], dict]] = [
      {"goal": "track order", "tool": "track_order_tool", "args": {}, "done": False, "final_response": ""}),
     (["human", "agent", "person", "operator", "supervisor", "manager", "escalate"],
      {"goal": "human handoff", "tool": "handoff_tool", "args": {}, "done": False, "final_response": ""}),
+    (["hello", "hey", "hi", "good morning", "good afternoon", "good evening",
+     "what can you do", "how can you help", "help me"],
+     {
+        "goal": "greeting/capability",
+        "tool": "handoff_tool",
+        "args": {},
+        "done": True,
+        "final_response": (
+            "Hi! I can help with order tracking, refund and return policy questions, "
+            "billing issues, account updates, product issues like damaged or missing items, "
+            "and human-agent escalation when needed."
+        ),
+     }),
 ]
 
 
@@ -86,13 +150,16 @@ def mock_plan(user_message: str, entities: dict, memory: dict, observations: lis
             plan = dict(template)
             plan["args"] = dict(entities)
             return plan
-    # Default: handoff
+    # Default: clarify the request instead of silently handing off.
     return {
-        "goal": "fallback handoff",
+        "goal": "clarify request",
         "tool": "handoff_tool",
         "args": {},
-        "done": False,
-        "final_response": "",
+        "done": True,
+        "final_response": (
+            "I can help with orders, refunds, billing, account updates, product issues, "
+            "or connecting you to a human agent. Could you share which of those you need?"
+        ),
     }
 
 
@@ -105,7 +172,26 @@ def mock_text(system: str, user: str) -> str:
             "for unused items in original packaging. Refunds are processed within 5–7 business days "
             "after inspection. Final-sale items are not eligible."
         )
-    return "I have noted your request. A support team member will follow up shortly."
+    if any(keyword in u for keyword in ["billing", "charged", "invoice", "payment", "overcharged", "subscription"]):
+        return (
+            "I can help with billing questions such as duplicate charges, invoices, subscriptions, "
+            "or payment issues. If you share your order number or the charge you are asking about, "
+            "I can guide you to the next step."
+        )
+    if any(keyword in u for keyword in ["order", "track", "tracking", "parcel", "delivery", "shipping", "status"]):
+        return (
+            "I can help track an order or delivery status. Please share your order number if you have it, "
+            "and I can look up the latest shipment details."
+        )
+    if any(keyword in u for keyword in ["account", "email", "phone", "address", "profile", "update", "change"]):
+        return (
+            "I can help with account updates like your email, phone number, or address. "
+            "If you tell me what needs to change, I can guide you through the verified update flow."
+        )
+    return (
+        "I can help with order tracking, refunds, billing issues, account updates, product issues, "
+        "or getting a human agent involved. Tell me a bit more about what you need."
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -199,5 +285,10 @@ def is_mock_mode() -> bool:
 
 def set_mock_mode(enabled: bool = True) -> None:
     """Force mock mode — useful for testing."""
-    global _mock_mode
+    global _generator, _mock_mode, _mock_mode_forced, _model_load_attempted
+    _mock_mode_forced = enabled
     _mock_mode = enabled
+    if enabled:
+        _generator = None
+    else:
+        _model_load_attempted = False

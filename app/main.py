@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field, validator
 
 from app.agent.loop import run_turn
 from app.agent import memory as memory_store
+from app.models.llm import is_mock_mode
 
 # ---------------------------------------------------------------------------
 # Logging setup
@@ -83,6 +84,16 @@ class ChatResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     version: str
+    mock_mode: bool
+
+
+@app.on_event("startup")
+def log_startup_mode() -> None:
+    mock_mode = is_mock_mode()
+    if mock_mode:
+        logger.warning("Application started in mock mode. Set MOCK_MODE=false and install model dependencies to use the real LLM.")
+    else:
+        logger.info("Application started with the real LLM backend.")
 
 
 # ---------------------------------------------------------------------------
@@ -90,7 +101,7 @@ class HealthResponse(BaseModel):
 # ---------------------------------------------------------------------------
 @app.get("/health", response_model=HealthResponse, tags=["ops"])
 def health() -> HealthResponse:
-    return HealthResponse(status="ok", version="1.0.0")
+    return HealthResponse(status="ok", version="1.0.0", mock_mode=is_mock_mode())
 
 
 @app.post("/chat", response_model=ChatResponse, tags=["agent"])
