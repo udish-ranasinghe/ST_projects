@@ -97,7 +97,7 @@ def _ensure_model() -> None:
     if _mock_mode and _model_load_attempted:
         return
 
-    if not env_mock_mode and _has_explicit_blank_model_id():
+    if env_mock_mode is not False and _has_explicit_blank_model_id():
         logger.info("MODEL_ID is empty; running in deterministic mock mode.")
         _mock_mode = True
         return
@@ -109,6 +109,12 @@ def _ensure_model() -> None:
 # ---------------------------------------------------------------------------
 # Mock deterministic planner responses
 # ---------------------------------------------------------------------------
+_MOCK_CAPABILITIES_RESPONSE = (
+    "Hi! I can help with order tracking, refund and return policy questions, "
+    "billing issues, account updates, product issues like damaged or missing items, "
+    "and human-agent escalation when needed."
+)
+
 _MOCK_PLAN_RULES: list[tuple[list[str], dict]] = [
     # Product issues checked BEFORE order tracking to avoid "damaged/missing item" matching "order"/"arrived"
     (["damaged", "broken", "defective", "faulty", "incorrect item", "wrong item", "wrong product",
@@ -131,18 +137,21 @@ _MOCK_PLAN_RULES: list[tuple[list[str], dict]] = [
      {"goal": "track order", "tool": "track_order_tool", "args": {}, "done": False, "final_response": ""}),
     (["human", "agent", "person", "operator", "supervisor", "manager", "escalate"],
      {"goal": "human handoff", "tool": "handoff_tool", "args": {}, "done": False, "final_response": ""}),
-    (["hello", "hey", "hi", "good morning", "good afternoon", "good evening",
-     "what can you do", "how can you help", "help me"],
+    (["hello", "hey", "hi", "good morning", "good afternoon", "good evening"],
      {
-        "goal": "greeting/capability",
+        "goal": "greeting",
         "tool": "",
         "args": {},
         "done": True,
-        "final_response": (
-            "Hi! I can help with order tracking, refund and return policy questions, "
-            "billing issues, account updates, product issues like damaged or missing items, "
-            "and human-agent escalation when needed."
-        ),
+        "final_response": _MOCK_CAPABILITIES_RESPONSE,
+     }),
+    (["what can you do", "how can you help", "help me"],
+     {
+        "goal": "capability question",
+        "tool": "",
+        "args": {},
+        "done": True,
+        "final_response": _MOCK_CAPABILITIES_RESPONSE,
      }),
 ]
 
