@@ -50,7 +50,7 @@ async def lifespan(_: FastAPI):
     mock_mode = is_mock_mode()
     if mock_mode:
         logger.warning("Application started in mock mode.")
-        logger.info("Install the optional model dependencies to enable the real LLM. Set MOCK_MODE=false only if you want to force that path when the dependencies are present.")
+        logger.info("To enable the real LLM, install the optional model dependencies. Set MOCK_MODE=false to force that path when dependencies are present.")
     else:
         logger.info("Application started with the real LLM backend.")
     yield
