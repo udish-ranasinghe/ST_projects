@@ -7,6 +7,7 @@ import logging
 import os
 import time
 from collections import defaultdict
+from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional
 
 from fastapi import FastAPI, HTTPException, Request, status
@@ -44,6 +45,16 @@ def _check_rate_limit(client_ip: str) -> bool:
     return True
 
 
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    mock_mode = is_mock_mode()
+    if mock_mode:
+        logger.warning("Application started in mock mode. Set MOCK_MODE=false and install model dependencies to use the real LLM.")
+    else:
+        logger.info("Application started with the real LLM backend.")
+    yield
+
+
 # ---------------------------------------------------------------------------
 # FastAPI app
 # ---------------------------------------------------------------------------
@@ -51,6 +62,7 @@ app = FastAPI(
     title="Customer Service AI Agent",
     description="Agentic customer service bot: plan → act → observe → respond",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -85,15 +97,6 @@ class HealthResponse(BaseModel):
     status: str
     version: str
     mock_mode: bool
-
-
-@app.on_event("startup")
-def log_startup_mode() -> None:
-    mock_mode = is_mock_mode()
-    if mock_mode:
-        logger.warning("Application started in mock mode. Set MOCK_MODE=false and install model dependencies to use the real LLM.")
-    else:
-        logger.info("Application started with the real LLM backend.")
 
 
 # ---------------------------------------------------------------------------
