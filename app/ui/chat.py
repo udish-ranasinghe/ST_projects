@@ -100,7 +100,7 @@ footer { display: none !important; }
 
 
 def build_ui() -> gr.Blocks:
-    with gr.Blocks(css=CSS, title="Customer Service AI Agent") as demo:
+    with gr.Blocks(title="Customer Service AI Agent") as demo:
         gr.Markdown(
             """
             # 🤖 Customer Service AI Agent
@@ -117,7 +117,6 @@ def build_ui() -> gr.Blocks:
                 chatbot = gr.Chatbot(
                     label="Conversation",
                     height=480,
-                    bubble_full_width=False,
                 )
                 with gr.Row():
                     msg_box = gr.Textbox(
@@ -170,6 +169,7 @@ def main() -> None:
         server_port=int(os.getenv("UI_PORT", "7860")),
         debug=False,
         share=os.getenv("GRADIO_SHARE", "false").lower() == "true",
+        css=CSS,
     )
 
 
