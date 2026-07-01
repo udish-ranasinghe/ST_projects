@@ -69,9 +69,8 @@ def _read_mock_mode_override() -> Optional[bool]:
 
 def _load_model() -> bool:
     """Attempt to load Qwen2.5 Instruct via transformers. Returns True on success."""
-    global _generator, _mock_mode, _model_load_attempted
+    global _generator, _mock_mode
     model_id = _configured_model_id()
-    _model_load_attempted = True
     try:
         import torch
         from transformers import pipeline
@@ -98,7 +97,7 @@ def _load_model() -> bool:
 
 
 def _ensure_model() -> None:
-    global _generator, _mock_mode
+    global _generator, _mock_mode, _model_load_attempted
     if _mock_mode_forced is True:
         _mock_mode = True
         _generator = None
@@ -125,6 +124,7 @@ def _ensure_model() -> None:
         return
 
     if not _mock_mode or env_mock_mode is False:
+        _model_load_attempted = True
         _load_model()
 
 
