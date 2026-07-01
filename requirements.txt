@@ -1,0 +1,27 @@
+# Customer Service AI Agent — Python dependencies
+
+# Web framework
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+pydantic>=2.7.0
+
+# HTTP client (used by the Gradio UI to call the backend)
+requests>=2.31.0
+
+# Frontend / chat UI
+gradio>=4.36.0
+
+# Config parsing
+PyYAML>=6.0.1
+
+# Machine learning (optional — only needed for real LLM; mock mode works without these)
+# Uncomment to enable Qwen2.5 Instruct model support:
+# torch>=2.2.0
+# transformers>=4.41.0
+# accelerate>=0.30.0
+# sentencepiece>=0.2.0
+
+# Testing
+pytest>=8.1.0
+pytest-asyncio>=0.23.0
+httpx>=0.27.0        # async test client for FastAPI
