@@ -27,6 +27,11 @@ def _configured_model_id() -> str:
     return configured.strip()
 
 
+def _has_explicit_blank_model_id() -> bool:
+    configured = os.getenv("MODEL_ID")
+    return configured is not None and not configured.strip()
+
+
 def _read_mock_mode_override() -> Optional[bool]:
     raw = os.getenv("MOCK_MODE")
     if raw is None:
@@ -92,7 +97,7 @@ def _ensure_model() -> None:
     if _mock_mode and _model_load_attempted:
         return
 
-    if not env_mock_mode and not _configured_model_id():
+    if not env_mock_mode and _has_explicit_blank_model_id():
         logger.info("MODEL_ID is empty; running in deterministic mock mode.")
         _mock_mode = True
         return
@@ -130,7 +135,7 @@ _MOCK_PLAN_RULES: list[tuple[list[str], dict]] = [
      "what can you do", "how can you help", "help me"],
      {
         "goal": "greeting/capability",
-        "tool": "handoff_tool",
+        "tool": "",
         "args": {},
         "done": True,
         "final_response": (
@@ -153,7 +158,7 @@ def mock_plan(user_message: str, entities: dict, memory: dict, observations: lis
     # Default: clarify the request instead of silently handing off.
     return {
         "goal": "clarify request",
-        "tool": "handoff_tool",
+        "tool": "",
         "args": {},
         "done": True,
         "final_response": (

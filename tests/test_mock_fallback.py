@@ -11,9 +11,15 @@ from app.models.llm import mock_plan, mock_text, set_mock_mode
 
 @pytest.fixture(autouse=True)
 def use_mock_mode():
+    original_state = (
+        llm._generator,
+        llm._mock_mode,
+        llm._mock_mode_forced,
+        llm._model_load_attempted,
+    )
     set_mock_mode(True)
     yield
-    set_mock_mode(True)
+    llm._generator, llm._mock_mode, llm._mock_mode_forced, llm._model_load_attempted = original_state
 
 
 def test_mock_plan_returns_capabilities_for_greetings():
